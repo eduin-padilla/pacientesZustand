@@ -1,31 +1,79 @@
-
 import { useForm } from 'react-hook-form'
 import Error from './Error'
+import {toast} from 'react-toastify'
 import type { DraftPatient } from '../type'
 import { usePatientStore } from '../store'
-
+import { useEffect } from 'react'
+ 
 export default function PatientForm() {
+ 
+    const addPatient = usePatientStore(state => state.addPatient)
+    const patients = usePatientStore(state => state.patients)
+    const activeId = usePatientStore(state => state.activeId)
+    const updatePatient = usePatientStore(state => state.updatePatient)
 
+    type FormData = {
 
-    const  addPatient  = usePatientStore( state => state.addPatient)
-
-    const { register, handleSubmit, formState: {errors}, reset } = useForm<DraftPatient>()
-    const registerPatient = (data: DraftPatient) => {
-        addPatient(data)
-
-        reset()
-
+        name: string
+        caretaker: string
+        email: string
+        date: string
+        symptoms: string
     }
+ 
+    const { register, handleSubmit, setValue, formState: {errors} } = useForm<FormData>()
+
+    
+    useEffect(() => {
+
+        if(activeId){
+            const activePatient = patients.filter(patient => patient.id === activeId)[0]
+            setValue('name', activePatient.name)
+            setValue('caretaker', activePatient.caretaker)
+            setValue('email', activePatient.email)
+            setValue('date', activePatient.date)
+            setValue('symptoms', activePatient.symptoms)
+
+        }
+
+
+    },[activeId, patients, setValue])
+ 
+    const registerPatient = (data: FormData) => {
+
+        const pateintData: DraftPatient ={
+            name: data.name,
+            caretaker: data.caretaker,
+            email: data.email,
+            date: data.date,
+            symptoms: data.symptoms
+        }
+
+        if(activeId) {
+            updatePatient(pateintData)
+            toast.success('Paciente actualizado correctamente')
+        }else{
+            addPatient(pateintData)
+            toast.success('Paciente registrado correctamente')
+        }
+        
+        setValue('name', '' )
+        setValue('caretaker', '')
+        setValue('email', '')
+        setValue('date', '')
+        setValue('symptoms', '')
+    }
+
   
     return (
         <div className="md:w-1/2 lg:w-2/5 mx-5">
             <h2 className="font-black text-3xl text-center">Seguimiento Pacientes</h2>
-
+ 
             <p className="text-lg mt-5 text-center mb-10">
                 Añade Pacientes y{' '}
                 <span className="text-indigo-600 font-bold">Administralos</span>
             </p>
-
+ 
             <form 
                 className="bg-white shadow-md rounded-lg py-10 px-5 mb-10"
                 noValidate
@@ -41,7 +89,7 @@ export default function PatientForm() {
                             type="text" 
                             placeholder="Nombre del Paciente" 
                             {...register('name', {
-                            required: 'el nombre del paciente es obligatorio',
+                                required: 'El Nombre del paciente es obligatorio',
                             })}
                             
                         />
@@ -51,7 +99,7 @@ export default function PatientForm() {
                         )}
                         
                     </div>
-
+ 
                     <div className="mb-5">
                     <label htmlFor="caretaker" className="text-sm uppercase font-bold">
                         Propietario 
@@ -62,7 +110,7 @@ export default function PatientForm() {
                         type="text" 
                         placeholder="Nombre del Propietario" 
                         {...register('caretaker', {
-                            required: 'el nombre del propietario es obligatorio',
+                                required: 'El Propietario es obligatorio',
                             })}
                     />
                         {errors.caretaker && (
@@ -70,7 +118,7 @@ export default function PatientForm() {
                             
                         )}
                     </div>
-
+ 
                 <div className="mb-5">
                     <label htmlFor="email" className="text-sm uppercase font-bold">
                         Email 
@@ -87,14 +135,14 @@ export default function PatientForm() {
                                 message: 'Email No Válido'
                             }
                         })} 
-
+ 
                     />
                         {errors.email && (
                             <Error>{errors.email?.message}</Error>
                             
                         )}
                 </div>
-
+ 
                 <div className="mb-5">
                     <label htmlFor="date" className="text-sm uppercase font-bold">
                         Fecha Alta 
@@ -104,9 +152,9 @@ export default function PatientForm() {
                         className="w-full p-3  border border-gray-100"  
                         type="date" 
                         {...register('date', {
-                            required: 'la fecha de alta es obligatoria',
+                                required: 'La fecha de alta es obligatoria',
                             })}
-
+ 
                     />
                     {errors.date && (
                         <Error>{errors.date?.message}</Error>
@@ -122,16 +170,15 @@ export default function PatientForm() {
                         className="w-full p-3  border border-gray-100"  
                         placeholder="Síntomas del paciente" 
                         {...register('symptoms', {
-                            required: 'los sintomas son obligatorios',
+                                required: 'Los síntomas son obligatorios',
                             })}
-                    >
-                    </textarea>
+                    />
                         {errors.symptoms && (
                             <Error>{errors.symptoms?.message}</Error>
                             
                         )}
                 </div>
-
+ 
                 <input
                     type="submit"
                     className="bg-indigo-600 w-full p-3 text-white uppercase font-bold hover:bg-indigo-700 cursor-pointer transition-colors"
